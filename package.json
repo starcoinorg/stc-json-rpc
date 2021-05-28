@@ -1,0 +1,40 @@
+{
+  "name": "@starcoin/stc-json-rpc",
+  "version": "0.1.0",
+  "main": "src/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "files": [
+    "src/*.js"
+  ],
+  "dependencies": {
+    "eth-json-rpc-middleware": "^6.0.0",
+    "eth-rpc-errors": "^3.0.0",
+    "json-rpc-engine": "^5.3.0",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "@metamask/eslint-config": "^3.0.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-import": "^2.20.1",
+    "tape": "^4.8.0"
+  },
+  "scripts": {
+    "lint": "eslint --ext .js .",
+    "test": "node test/index.js"
+  },
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/starcoin/stc-json-rpc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/starcoin/stc-json-rpc/issues"
+  },
+  "homepage": "https://github.com/starcoin/stc-json-rpc#readme",
+  "description": "json-rpc-engine middleware for Starcoin's endpoints"
+}
