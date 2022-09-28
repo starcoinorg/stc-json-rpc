@@ -22,13 +22,13 @@ function createInfuraMiddleware(opts = {}) {
 
   // validate options
   if (!projectId || typeof projectId !== 'string') {
-    throw new Error(`Invalid value for 'projectId': "${projectId}"`)
+    throw new Error(`Invalid value for 'projectId': "${ projectId }"`)
   }
   if (!headers || typeof headers !== 'object') {
-    throw new Error(`Invalid value for 'headers': "${headers}"`)
+    throw new Error(`Invalid value for 'headers': "${ headers }"`)
   }
   if (!maxAttempts) {
-    throw new Error(`Invalid value for 'maxAttempts': "${maxAttempts}" (${typeof maxAttempts})`)
+    throw new Error(`Invalid value for 'maxAttempts': "${ maxAttempts }" (${ typeof maxAttempts })`)
   }
 
   return createAsyncMiddleware(async (req, res) => {
@@ -49,7 +49,7 @@ function createInfuraMiddleware(opts = {}) {
         // if no more attempts remaining, throw an error
         const remainingAttempts = maxAttempts - attempt
         if (!remainingAttempts) {
-          const errMsg = `Provider - cannot complete request. All retries exhausted.\nOriginal Error:\n${err.toString()}\n\n`
+          const errMsg = `Provider - cannot complete request. All retries exhausted.\nOriginal Error:\n${ err.toString() }\n\n`
           const retriesExhaustedErr = new Error(errMsg)
           throw retriesExhaustedErr
         }
@@ -74,6 +74,7 @@ function isRetriableError(err) {
 
 async function performFetch(network, projectId, extraHeaders, req, res, source) {
   const { fetchUrl, fetchParams } = fetchConfigFromReq({ network, projectId, extraHeaders, req, source })
+
   const response = await fetch(fetchUrl, fetchParams)
   const rawData = await response.text()
   // handle errors
@@ -94,18 +95,28 @@ async function performFetch(network, projectId, extraHeaders, req, res, source) 
     }
   }
 
-  // special case for now
-  if (req.method === 'eth_getBlockByNumber' && rawData === 'Not Found') {
-    res.result = null
-    return
-  }
-
   // parse JSON
   const data = JSON.parse(rawData)
 
   // finally return result
-  res.result = data.result
-  res.error = data.error
+  if (['devnet'].includes(network)) {
+    //aptos
+    switch (req.method) {
+      case 'chain.id':
+        res.result = { id: data.chain_id, name: network }
+        break;
+      case 'chain.info':
+        res.result = { head: { number: Number(data.block_height) } }
+        break;
+      default:
+        res.result = data
+    }
+  } else {
+    // starcoin
+    res.result = data.result
+    res.error = data.error
+  }
+  console.log(network, req.method, res.result)
 }
 
 function fetchConfigFromReq({ network, projectId, extraHeaders, req, source }) {
@@ -116,16 +127,36 @@ function fetchConfigFromReq({ network, projectId, extraHeaders, req, source }) {
   })
 
   if (source) {
-    headers['Source'] = `${source}/${requestOrigin}`
+    headers['Source'] = `${ source }/${ requestOrigin }`
   }
 
-  return {
-    fetchUrl: `https://${network}-seed.starcoin.org`,
-    fetchParams: {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(normalizeReq(req)),
-    },
+  if (['devnet'].includes(network)) {
+    // aptos
+    let method = 'GET'
+    let fetchUrl = `https://fullnode.${ network }.aptoslabs.com/v1/`
+    if (req.method === 'state.list_resource') {
+      fetchUrl = `${ fetchUrl }accounts/${ req.params[0] }/resources`
+    }
+    if (req.method === 'getAccount') {
+      fetchUrl = `${ fetchUrl }accounts/${ req.params[0] }`
+    }
+    return {
+      fetchUrl,
+      fetchParams: {
+        method,
+        headers,
+      },
+    }
+  } else {
+    // starcoin
+    return {
+      fetchUrl: `https://${ network }-seed.starcoin.org`,
+      fetchParams: {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(normalizeReq(req)),
+      },
+    }
   }
 }
 
