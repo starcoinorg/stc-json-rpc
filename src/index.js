@@ -116,7 +116,6 @@ async function performFetch(network, projectId, extraHeaders, req, res, source) 
     res.result = data.result
     res.error = data.error
   }
-  console.log(network, req.method, res.result)
 }
 
 function fetchConfigFromReq({ network, projectId, extraHeaders, req, source }) {
@@ -139,6 +138,9 @@ function fetchConfigFromReq({ network, projectId, extraHeaders, req, source }) {
     }
     if (req.method === 'getAccount') {
       fetchUrl = `${ fetchUrl }accounts/${ req.params[0] }`
+    }
+    if (req.method === 'chain.get_transaction_info') {
+      fetchUrl = `${ fetchUrl }transactions/by_hash/${ req.params[0] }`
     }
     return {
       fetchUrl,
