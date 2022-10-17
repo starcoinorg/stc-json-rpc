@@ -99,7 +99,7 @@ async function performFetch(network, projectId, extraHeaders, req, res, source) 
   const data = JSON.parse(rawData)
 
   // finally return result
-  if (['devnet'].includes(network)) {
+  if (['devnet', 'testnet', 'mainnet'].includes(network)) {
     //aptos
     switch (req.method) {
       case 'chain.id':
@@ -129,7 +129,7 @@ function fetchConfigFromReq({ network, projectId, extraHeaders, req, source }) {
     headers['Source'] = `${ source }/${ requestOrigin }`
   }
 
-  if (['devnet'].includes(network)) {
+  if (['devnet', 'testnet', 'mainnet'].includes(network)) {
     // aptos
     let method = 'GET'
     let fetchUrl = `https://fullnode.${ network }.aptoslabs.com/v1/`
