@@ -133,12 +133,16 @@ function fetchConfigFromReq({ network, projectId, extraHeaders, req, source }) {
     // aptos
     let method = 'GET'
     let fetchUrl = `https://fullnode.${ network }.aptoslabs.com/v1/`
-    if (req.method === 'state.list_resource') {
+    if (req.method === 'state.list_resource' || req.method === 'getAccountResources') {
       fetchUrl = `${ fetchUrl }accounts/${ req.params[0] }/resources`
     }
     if (req.method === 'getAccount') {
       fetchUrl = `${ fetchUrl }accounts/${ req.params[0] }`
     }
+    if (req.method === 'getAccountResource') {
+      fetchUrl = `${ fetchUrl }accounts/${ req.params[0] }/resource/${ encodeURI(req.params[1]) }`
+    }
+
     if (req.method === 'chain.get_transaction_info') {
       fetchUrl = `${ fetchUrl }transactions/by_hash/${ req.params[0] }`
     }
