@@ -119,6 +119,7 @@ async function performFetch(network, projectId, extraHeaders, req, res, source) 
 }
 
 function fetchConfigFromReq({ network, projectId, extraHeaders, req, source }) {
+  // console.log('fetchConfigFromReq', { network, projectId, extraHeaders, source }, req)
   const requestOrigin = req.origin || 'internal'
   const headers = Object.assign({}, extraHeaders, {
     'Accept': 'application/json',
@@ -132,6 +133,7 @@ function fetchConfigFromReq({ network, projectId, extraHeaders, req, source }) {
   if (['devnet', 'testnet', 'mainnet'].includes(network)) {
     // aptos
     let method = 'GET'
+    let body
     let fetchUrl = `https://fullnode.${ network }.aptoslabs.com/v1/`
     if (req.method === 'state.list_resource' || req.method === 'getAccountResources') {
       fetchUrl = `${ fetchUrl }accounts/${ req.params[0] }/resources`
@@ -142,16 +144,31 @@ function fetchConfigFromReq({ network, projectId, extraHeaders, req, source }) {
     if (req.method === 'getAccountResource') {
       fetchUrl = `${ fetchUrl }accounts/${ req.params[0] }/resource/${ encodeURI(req.params[1]) }`
     }
-
     if (req.method === 'chain.get_transaction_info') {
       fetchUrl = `${ fetchUrl }transactions/by_hash/${ req.params[0] }`
     }
+    if (req.method === 'getEventsByEventHandle') {
+      fetchUrl = `${ fetchUrl }accounts/${ req.params[0] }/events/${ req.params[1] }/${ req.params[2] }?limit=${ req.params[3] }`
+    }
+    if (req.method === 'getTableItem') {
+      fetchUrl = `${ fetchUrl }tables/${ req.params[0] }/item`
+      method = 'POST'
+      body = JSON.stringify({
+        key_type: req.params[1],
+        value_type: req.params[2],
+        key: req.params[3]
+      })
+    }
+    const fetchParams = {
+      method,
+      headers,
+    }
+    if (method === 'POST') {
+      fetchParams.body = body
+    }
     return {
       fetchUrl,
-      fetchParams: {
-        method,
-        headers,
-      },
+      fetchParams,
     }
   } else {
     // starcoin
